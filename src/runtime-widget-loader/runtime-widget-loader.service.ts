@@ -1,0 +1,174 @@
+/*
+* Copyright (c) 2020 Software AG, Darmstadt, Germany and/or its licensors
+*
+* SPDX-License-Identifier: Apache-2.0
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*    http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+ */
+
+import {
+    Compiler,
+    ComponentFactory,
+    Injectable,
+    Injector,
+    NgModuleRef
+} from "@angular/core";
+import {
+    DynamicComponentDefinition,
+    HOOK_COMPONENTS,
+    DynamicComponentComponent,
+    DynamicComponentService, AlertService
+} from "@c8y/ngx-components";
+import {BehaviorSubject, of} from "rxjs";
+import {filter, first, switchMap} from "rxjs/operators";
+import corsImport from "webpack-external-import/corsImport";
+
+interface WidgetComponentFactoriesAndInjector {
+    componentFactory: ComponentFactory<any>,
+    configComponentFactory?: ComponentFactory<any>,
+    injector: Injector
+}
+
+@Injectable({providedIn: 'root'})
+export class RuntimeWidgetLoaderService {
+    isLoaded$ = new BehaviorSubject(false);
+    widgetFactories = new Map<string, WidgetComponentFactoriesAndInjector>();
+
+    constructor(private compiler: Compiler, private injector: Injector, private alertService: AlertService) {
+        this.monkeyPatch();
+    }
+
+    monkeyPatch() {
+        const runtimeWidgetLoaderService = this;
+        DynamicComponentComponent.prototype.loadComponent = function (dynamicComponent) {
+            try {
+                this.error = undefined;
+                if ((dynamicComponent as any).isRuntimeLoaded) {
+                    const {componentFactory, configComponentFactory, injector} = runtimeWidgetLoaderService.widgetFactories.get(this.componentId)
+                    this.host.clear();
+                    const componentRef = this.host.createComponent(this.mode === 'component' ? componentFactory : configComponentFactory, undefined, injector);
+                    componentRef.instance.config = this.config;
+                } else {
+                    const componentFactory = this.componentFactoryResolver.resolveComponentFactory(this.mode === 'component' ? dynamicComponent.component : dynamicComponent.configComponent);
+                    this.host.clear();
+                    const componentRef = this.host.createComponent(componentFactory);
+                    componentRef.instance.config = this.config;
+                }
+            }
+            catch (ex) {
+                this.error = ex;
+            }
+        };
+        DynamicComponentComponent.prototype.ngOnChanges = function () {
+            this.dynamicComponentService
+                .getById$(this.componentId)
+                // If the component isn't recognised then delay the widget load until the runtimeLoadedWidgets have loaded
+                .pipe(switchMap(cmp => {
+                    if (cmp === undefined || (cmp as any).isRuntimeLoaded) {
+                        return runtimeWidgetLoaderService.isLoaded$.pipe(
+                            filter(loaded => loaded),
+                            first(), // TODO: We could support multiple loads by removing this.... however without something to tear down the subscription we'd have a memory leak
+                            switchMap(() => this.dynamicComponentService
+                                .getById$(this.componentId))
+                        );
+                    } else {
+                        return of(cmp);
+                    }
+                })).subscribe(cmp => this.loadComponent(cmp));
+        };
+    }
+
+    async loadRuntimeWidgets() {
+        const manifest = await (await fetch(`cumulocity.json?${Date.now()}`)).json();
+
+        const contextPaths = manifest.widgetContextPaths || [];
+
+        // Import every widget's importManifest.js
+        // The importManifest is a mapping from exported module name to webpack chunk file
+        for (const contextPath of contextPaths) {
+            // Don't need to wait for login, application code is public
+            await (corsImport(`/apps/${contextPath}/importManifest.js?${Date.now()}`)
+                .catch((e) => {
+                    console.error(`Unable to find widget manifest: /apps/${contextPath}/importManifest.js\n`, e);
+                }));
+        }
+
+        // Load the jsModules containing the custom widgets
+        const jsModules = [];
+        for (const contextPath of contextPaths) {
+            try {
+                // @ts-ignore
+                const jsModule = await __webpack_require__.interleaved(`${contextPath}/${contextPath}-CustomWidget`);
+                jsModules.push(jsModule);
+            } catch (e) {
+                console.error(`Module: ${contextPath}, did not contain a custom widget\n`, e);
+                this.alertService.danger('Failed to load a runtime custom widget, it may have been compiled for a different Cumulocity version.', e.message);
+            }
+        }
+
+        // Create a list of all of the ngModules within the jsModules
+        const ngModules: NgModuleRef<unknown>[] = [];
+        for (const jsModule of jsModules) {
+            for (const key of Object.keys(jsModule)) {
+                const exportedObj = jsModule[key];
+                // Check if the exportedObj is an angular module
+                if (exportedObj.hasOwnProperty('__annotations__') && exportedObj.__annotations__.some(annotation => annotation.__proto__.ngMetadataName === "NgModule")) {
+                    try {
+                        // Compile the angular module
+                        const ngModuleFactory = await this.compiler.compileModuleAsync(exportedObj);
+                        // Create an instance of the module
+                        const ngModule = ngModuleFactory.create(this.injector);
+                        ngModules.push(ngModule);
+                    } catch(e) {
+                        console.error(`Failed to compile widgets in module:`, jsModule, '\n', e);
+                        this.alertService.danger('Failed to load runtime custom widget, it may have been compiled for a different Cumulocity version.', e.message);
+                    }
+                }
+            }
+        }
+
+        // Have to wait until after angularJS is loaded to get the DynamicComponentService so we can't have it injected into the constructor, instead get from the injector
+        const dynamicComponentService = this.injector.get(DynamicComponentService);
+
+        // Wait for the statically loaded widgets to load... it can take a while for the angularJS ones to be resolved!
+        // It is much easier to check static widgets have loaded (they all load at once) before we start loading the runtime widgets
+        // Note: We don't have to wait for the state to reach a fixed size, it is enough for the first item to enter because:
+        //  All static widgets load in the same event loop cycle - promise will resolve in the next cycle
+        await dynamicComponentService.state$.pipe(filter(state => state.size > 0), first()).toPromise()
+
+        // Pull out all of the widgets from those angular modules and add them to cumulocity
+        for (const ngModule of ngModules) {
+            const widgets = ngModule.injector.get<DynamicComponentDefinition[]>(HOOK_COMPONENTS) || [];
+
+            // Add the widget components into cumulocity
+            for (const widget of widgets) {
+                (widget as any).isRuntimeLoaded = true;
+
+                try {
+                    this.widgetFactories.set(widget.id, {
+                        componentFactory: ngModule.componentFactoryResolver.resolveComponentFactory(widget.component),
+                        ...widget.configComponent && {configComponentFactory: ngModule.componentFactoryResolver.resolveComponentFactory(widget.configComponent)},
+                        injector: ngModule.injector
+                    });
+
+                    dynamicComponentService.add(widget);
+                } catch (e) {
+                    console.error(`Failed to load runtime widget:`, widget, '\n', e);
+                    this.alertService.danger('Failed to load runtime custom widget, it may have been compiled for a different Cumulocity version.', e.message);
+                }
+            }
+        }
+
+        this.isLoaded$.next(true);
+    }
+}
