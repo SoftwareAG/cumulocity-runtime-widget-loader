@@ -21,6 +21,7 @@ import {CommonModule, HOOK_ACTION_BAR} from "@c8y/ngx-components";
 import {RuntimeWidgetInstallerModalComponent} from "./runtime-widget-installer-modal.component";
 import {RuntimeWidgetInstallerActionBarComponent} from "./runtime-widget-installer-action-bar.component";
 import {RuntimeWidgetInstallerActionBarFactory} from "./runtime-widget-installer-action-bar.factory";
+import {RuntimeWidgetInstallerService} from "./runtime-widget-installer.service";
 
 @NgModule({
     declarations: [RuntimeWidgetInstallerModalComponent, RuntimeWidgetInstallerActionBarComponent],
@@ -32,6 +33,7 @@ export class RuntimeWidgetInstallerModule {
         return {
             ngModule: RuntimeWidgetInstallerModule,
             providers: [
+                RuntimeWidgetInstallerService,
                 { provide: HOOK_ACTION_BAR, useClass: RuntimeWidgetInstallerActionBarFactory, multi: true}
             ]
         };

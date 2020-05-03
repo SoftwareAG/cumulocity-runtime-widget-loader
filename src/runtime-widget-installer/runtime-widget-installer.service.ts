@@ -24,7 +24,7 @@ export function contextPathFromURL() {
     return window.location.pathname.match(/\/apps\/(.*?)\//)[1];
 }
 
-@Injectable({providedIn: 'root'})
+@Injectable()
 export class RuntimeWidgetInstallerService {
     constructor(private fetchClient: FetchClient, private appService: ApplicationService) {}
 
