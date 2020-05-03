@@ -1,17 +1,20 @@
 {
   "$schema": "./node_modules/ng-packagr/package.schema.json",
   "name": "cumulocity-runtime-widget-loader",
-  "version": "0.0.0-development",
+  "version": "0.0.2-development",
   "description": "Loads packaged widgets into Cumulocity at runtime",
   "main": "src/public_api.ts",
   "ngPackage": {
+    "assets": [
+      "runtime-widget-webpack.config.js"
+    ],
     "lib": {
       "entryFile": "src/public_api.ts"
     }
   },
   "scripts": {
     "build": "ng-packagr -p package.json",
-    "prepare": "npm run build"
+    "deploy": "npm publish ./dist"
   },
   "keywords": [
     "Cumulocity",
