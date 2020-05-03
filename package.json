@@ -1,12 +1,13 @@
 {
   "$schema": "./node_modules/ng-packagr/package.schema.json",
   "name": "cumulocity-runtime-widget-loader",
-  "version": "0.0.2-development",
+  "version": "0.0.3-development",
   "description": "Loads packaged widgets into Cumulocity at runtime",
   "main": "src/public_api.ts",
   "ngPackage": {
     "assets": [
-      "runtime-widget-webpack.config.js"
+      "runtime-widget-webpack.config.js",
+      "patches/*"
     ],
     "lib": {
       "entryFile": "src/public_api.ts"
@@ -14,7 +15,8 @@
   },
   "scripts": {
     "build": "ng-packagr -p package.json",
-    "deploy": "npm publish ./dist"
+    "deploy": "npm publish ./dist",
+    "postinstall": "patch-package"
   },
   "keywords": [
     "Cumulocity",
@@ -34,29 +36,30 @@
     "webpack-external-import": "^2.2.3"
   },
   "devDependencies": {
+    "@angular-devkit/build-angular": "0.803.17",
     "@angular/animations": "8.2.13",
     "@angular/cdk": "8.2.3",
     "@angular/common": "8.2.13",
     "@angular/compiler": "8.2.13",
+    "@angular/compiler-cli": "8.2.13",
     "@angular/core": "8.2.13",
     "@angular/forms": "8.2.13",
+    "@angular/language-service": "8.2.13",
     "@angular/platform-browser": "8.2.13",
     "@angular/platform-browser-dynamic": "8.2.13",
     "@angular/router": "8.2.13",
     "@angular/upgrade": "8.2.13",
+    "@c8y/cli": "1006.2.0",
     "@c8y/ngx-components": "1006.2.0",
     "core-js": "^3.4.0",
     "jszip": "^3.4.0",
+    "ng-packagr": "^9.1.1",
     "ngx-bootstrap": "5.5.0",
+    "patch-package": "^6.2.2",
     "rxjs": "~6.4.0",
-    "url-search-params-polyfill": "6.0.0",
-    "zone.js": "~0.9.1",
-    "@angular-devkit/build-angular": "0.803.17",
-    "@angular/compiler-cli": "8.2.13",
-    "@angular/language-service": "8.2.13",
-    "@c8y/cli": "1006.2.0",
     "typescript": "3.5.3",
+    "url-search-params-polyfill": "6.0.0",
     "webpack-external-import": "^2.2.3",
-    "ng-packagr": "^9.1.1"
+    "zone.js": "~0.9.1"
   }
 }
