@@ -4,7 +4,7 @@ module.exports = function config() {
     return {
         plugins: [
             new URLImportPlugin ({
-                manifestName: "CumulocityApplicationWithRuntimeWidgets",
+                manifestName: "app",
                 provideExternals: {
                     "@angular/animations": "AngularAnimations",
                     "@angular/common": "AngularCommon",
