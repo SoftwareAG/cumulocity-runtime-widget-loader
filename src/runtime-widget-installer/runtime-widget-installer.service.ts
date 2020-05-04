@@ -16,17 +16,24 @@
 * limitations under the License.
  */
 
-import {Injectable, isDevMode} from "@angular/core";
-import { ApplicationService, FetchClient } from "@c8y/client";
+import {Injectable, Injector, isDevMode} from "@angular/core";
+import { ApplicationService } from "@c8y/client";
 import * as JSZip from "jszip";
 
 export function contextPathFromURL() {
     return window.location.pathname.match(/\/apps\/(.*?)\//)[1];
 }
 
-@Injectable()
+@Injectable({providedIn: 'root'})
 export class RuntimeWidgetInstallerService {
-    constructor(private fetchClient: FetchClient, private appService: ApplicationService) {}
+    private appService: ApplicationService;
+    constructor(injector: Injector) {
+        // Work around angular/typescript compiler issue...
+        // When we put the ApplicationService as an injection token then the compiler generates an import from @c8y/client/lib/src/ApplicationService
+        // This seems to only happen when providedIn: root is used...
+        // We want to use providedIn: root so that this service is tree-shaken
+        this.appService = injector.get(ApplicationService);
+    }
 
     /**
      * Installs a widget into the current application
