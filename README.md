@@ -12,11 +12,15 @@ Loads packaged Cumulocity custom widgets at runtime
    ```
    npm install jszip webpack-external-import
    ```
-2. Install the runtime widget loader:
+   For the 1006.2.0 version of cumulocity you also need to install a specific version of ngx-bootstrap:
+   ```
+   npm install ngx-bootstrap@5.5.0
+   ```   
+3. Install the runtime widget loader:
    ```
    npm install cumulocity-runtime-widget-loader
    ```
-3. Edit package.json start and build configurations to include an extraWebpackConfig option:
+4. Edit package.json start and build configurations to include an extraWebpackConfig option:
    ```
    {
      ...
@@ -27,7 +31,15 @@ Loads packaged Cumulocity custom widgets at runtime
      ...
    }
    ```
-4. Add cumulocity-runtime-widget-loader to the app.module.ts:
+5. Update the package.json `"main"` entry to point to `"index.ts"` rather than `"index.js"`:
+   ```
+   {
+     ...
+     "main": "index.ts"
+     ...
+   }
+   ```
+6. Add cumulocity-runtime-widget-loader to the app.module.ts:
    ```javascript
    import {RuntimeWidgetLoaderService, RuntimeWidgetInstallerModule} from "cumulocity-runtime-widget-loader";
    
@@ -54,11 +66,11 @@ Loads packaged Cumulocity custom widgets at runtime
    }
 
    ```
-5. Run the application:
+7. Run the application:
    ```
    npm start
    ```
-6. (Optional, but recommended) Include a patch to webpack-external-import to stop it creating lots of small files during a production build.
+8. (Optional, but recommended) Include a patch to webpack-external-import to stop it creating lots of small files during a production build.
    
    Install patch-package:
    ```
