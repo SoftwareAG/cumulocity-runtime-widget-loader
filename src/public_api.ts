@@ -16,12 +16,6 @@
 * limitations under the License.
  */
 
-// Patch @c8y/ngx-components to include a HOOK_COMPONENT for backwards compatibility
-const ngxComps = require("@c8y/ngx-components");
-if (ngxComps.HOOK_COMPONENT === undefined) {
-    ngxComps.HOOK_COMPONENT = ngxComps.HOOK_COMPONENTS;
-}
-
 import { RuntimeWidgetLoaderService } from "./runtime-widget-loader/runtime-widget-loader.service";
 import { RuntimeWidgetInstallerService } from "./runtime-widget-installer/runtime-widget-installer.service";
 import { RuntimeWidgetInstallerModalService } from "./runtime-widget-installer/runtime-widget-installer-modal.service";
