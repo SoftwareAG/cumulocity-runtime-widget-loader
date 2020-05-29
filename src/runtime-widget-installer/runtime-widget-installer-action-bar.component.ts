@@ -22,7 +22,7 @@ import {RuntimeWidgetInstallerModalService} from "./runtime-widget-installer-mod
 @Component({
     selector: 'li[runtime-widget-installer-actionbar-item]',
     template: `
-        <button class="btn btn-link" (click)="showInstallModal()"><i c8yIcon="plus-circle"></i> Install Widget</button>
+        <button (click)="showInstallModal()"><i c8yIcon="upload"></i> Install Widget</button>
     `
 })
 export class RuntimeWidgetInstallerActionBarComponent {

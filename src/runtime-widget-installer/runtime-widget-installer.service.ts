@@ -17,7 +17,7 @@
  */
 
 import {Injectable, Injector, isDevMode} from "@angular/core";
-import { ApplicationService } from "@c8y/client";
+import { ApplicationService, IApplication } from "@c8y/client";
 import * as JSZip from "jszip";
 
 export function contextPathFromURL() {
@@ -92,31 +92,21 @@ export class RuntimeWidgetInstallerService {
         // Step 2: Update the app's cumulocity.json to include the new widget
 
         // find the current app
-        const app = appList.find(app => app.contextPath === contextPathFromURL());
+        const app: IApplication & {widgetContextPaths?: string[]} = appList.find(app => app.contextPath === contextPathFromURL());
         if (!app) {
             throw Error('Could not find current application');
         }
 
-        const appC8yJson = await (await fetch(`cumulocity.json?${Date.now()}`)).json();
+        // Create a unique list of all the widgets in the app
+        const widgetContextPaths = Array.from(new Set([
+            ...app.widgetContextPaths || [],
+            widgetC8yJson.contextPath
+        ]));
 
-        // Update the app's cumulocity.json to include the new widget
-        const widgetContextPaths = appC8yJson.widgetContextPaths || [];
-        widgetContextPaths.push(widgetC8yJson.contextPath);
-        appC8yJson.widgetContextPaths = Array.from(new Set(widgetContextPaths));
-
-        const c8yJsonString = JSON.stringify(appC8yJson, null, 2);
-
-        // Convert the string to a utf-8 arraybuffer
-        const buffer = new ArrayBuffer(c8yJsonString.length);
-        const bufView = new Uint8Array(buffer);
-        for (let i = 0; i < c8yJsonString.length; i++) {
-            bufView[i] = c8yJsonString.charCodeAt(i);
-        }
-
-        // Deploy the updated cumulocity.json
-        await this.appService.binary(app).updateFiles([{
-            path: "cumulocity.json",
-            contents: buffer
-        }]);
+        // Update the application with the new widget context path list
+        await this.appService.update({
+            id: app.id,
+            widgetContextPaths
+        } as IApplication);
     }
 }

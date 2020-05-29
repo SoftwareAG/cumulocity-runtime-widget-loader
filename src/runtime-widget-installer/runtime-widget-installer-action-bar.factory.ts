@@ -29,7 +29,7 @@ export class RuntimeWidgetInstallerActionBarFactory implements ActionBarFactory 
     items: ActionBarItem[] = [
         {
             template: RuntimeWidgetInstallerActionBarComponent,
-            placement: 'right',
+            placement: 'more',
             priority: 0
         }
     ];

@@ -27,11 +27,13 @@ import {
     DynamicComponentDefinition,
     HOOK_COMPONENTS,
     DynamicComponentComponent,
-    DynamicComponentService, AlertService
+    DynamicComponentService, AlertService, AppStateService
 } from "@c8y/ngx-components";
 import {BehaviorSubject, of} from "rxjs";
 import {filter, first, switchMap} from "rxjs/operators";
 import corsImport from "webpack-external-import/corsImport";
+import { IApplication } from "@c8y/client";
+import {contextPathFromURL} from "../runtime-widget-installer/runtime-widget-installer.service";
 
 interface WidgetComponentFactoriesAndInjector {
     componentFactory: ComponentFactory<any>,
@@ -44,7 +46,7 @@ export class RuntimeWidgetLoaderService {
     isLoaded$ = new BehaviorSubject(false);
     widgetFactories = new Map<string, WidgetComponentFactoriesAndInjector>();
 
-    constructor(private compiler: Compiler, private injector: Injector, private alertService: AlertService) {
+    constructor(private compiler: Compiler, private injector: Injector, private alertService: AlertService, private appStateService: AppStateService) {
         this.monkeyPatch();
     }
 
@@ -89,9 +91,14 @@ export class RuntimeWidgetLoaderService {
     }
 
     async loadRuntimeWidgets() {
-        const manifest = await (await fetch(`cumulocity.json?${Date.now()}`)).json();
+        // Wait for login
+        const user = await this.appStateService.currentUser.pipe(filter(user => user != null), first()).toPromise();
 
-        const contextPaths = manifest.widgetContextPaths || [];
+        // Find the current app so that we can pull a list of installed widgets from it
+        const appList = (await (await fetch(`/application/applicationsByUser/${encodeURIComponent(user.userName)}?pageSize=2000`)).json()).applications;
+        const app: IApplication & {widgetContextPaths?: string[]} | undefined = appList.find(app => app.contextPath === contextPathFromURL());
+
+        const contextPaths = (app && app.widgetContextPaths) || [];
 
         // Import every widget's importManifest.js
         // The importManifest is a mapping from exported module name to webpack chunk file
