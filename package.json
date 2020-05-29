@@ -33,7 +33,7 @@
     "jszip": "^3.4.0",
     "ngx-bootstrap": "^5.5.0",
     "rxjs": "^6.4.0",
-    "webpack-external-import": "^2.2.3",
+    "webpack-external-import": "^2.2.4",
     "typescript": "^3.5.3"
   },
   "devDependencies": {
@@ -60,7 +60,7 @@
     "rxjs": "~6.4.0",
     "typescript": "3.5.3",
     "url-search-params-polyfill": "6.0.0",
-    "webpack-external-import": "^2.2.3",
+    "webpack-external-import": "^2.2.4",
     "zone.js": "~0.9.1"
   }
 }
