@@ -32,7 +32,7 @@ import {
 import {BehaviorSubject, of} from "rxjs";
 import {filter, first, switchMap} from "rxjs/operators";
 import corsImport from "webpack-external-import/corsImport";
-import { IApplication } from "@c8y/client";
+import { IApplication, FetchClient } from "@c8y/client";
 import {contextPathFromURL} from "../runtime-widget-installer/runtime-widget-installer.service";
 
 interface WidgetComponentFactoriesAndInjector {
@@ -46,7 +46,11 @@ export class RuntimeWidgetLoaderService {
     isLoaded$ = new BehaviorSubject(false);
     widgetFactories = new Map<string, WidgetComponentFactoriesAndInjector>();
 
+    private fetchClient: FetchClient;
+
     constructor(private compiler: Compiler, private injector: Injector, private alertService: AlertService, private appStateService: AppStateService) {
+        // Don't seem to be able to inject this normally - results in an import from @c8y/client/lib/src/core, I think this is an angular/typescript compiler bug
+        this.fetchClient = this.injector.get(FetchClient);
         this.monkeyPatch();
     }
 
@@ -95,7 +99,7 @@ export class RuntimeWidgetLoaderService {
         const user = await this.appStateService.currentUser.pipe(filter(user => user != null), first()).toPromise();
 
         // Find the current app so that we can pull a list of installed widgets from it
-        const appList = (await (await fetch(`/application/applicationsByUser/${encodeURIComponent(user.userName)}?pageSize=2000`)).json()).applications;
+        const appList = (await (await this.fetchClient.fetch(`/application/applicationsByUser/${encodeURIComponent(user.userName)}?pageSize=2000`)).json()).applications;
         const app: IApplication & {widgetContextPaths?: string[]} | undefined = appList.find(app => app.contextPath === contextPathFromURL());
 
         const contextPaths = (app && app.widgetContextPaths) || [];

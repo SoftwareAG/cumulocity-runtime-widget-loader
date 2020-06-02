@@ -22,7 +22,8 @@ import {Router} from "@angular/router";
 import {Injectable} from "@angular/core";
 import {map} from "rxjs/operators";
 import {Observable} from "rxjs";
-import {ɵb as ContextDashboardComponent, ɵh as CockpitDashboardComponent} from "@c8y/ngx-components/fesm5/c8y-ngx-components-context-dashboard";
+import {CockpitDashboardComponent} from "../non-public-c8y-access/cockpit-dashboard.component";
+import {ContextDashboardComponent} from "../non-public-c8y-access/context-dashboard.component";
 
 @Injectable()
 export class RuntimeWidgetInstallerActionBarFactory implements ActionBarFactory {
