@@ -66,11 +66,7 @@ Loads packaged Cumulocity custom widgets at runtime
    }
 
    ```
-7. Run the application:
-   ```
-   npm start
-   ```
-8. (Optional, but recommended) Include a patch to webpack-external-import to stop it creating lots of small files during a production build.
+7. Include patches to webpack-external-import and to @c8y/ngx-components.
    
    Install patch-package:
    ```
@@ -91,3 +87,8 @@ Loads packaged Cumulocity custom widgets at runtime
    ```
    npm install
    ```
+8. Run the application:
+   ```
+   npm start
+   ```
+
