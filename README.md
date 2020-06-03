@@ -1,10 +1,28 @@
-# cumulocity-runtime-widget-loader
-Loads packaged Cumulocity custom widgets at runtime
+# Cumulocity Runtime Widget Loader
+Load [packaged](https://github.com/SoftwareAG/cumulocity-runtime-widget) Cumulocity custom widgets at runtime, rather than by recompiling you whole application.
 
-## Installation Instructions
+## Widget Installation
+**Requires:** Application upload permission (usually admin rights)
+
+![widget installation](https://user-images.githubusercontent.com/38696279/83655992-e9997280-a5b6-11ea-82e4-8411fdd0ebc7.png)
+
+1. While on a dashboard screen, select the `More...` -> `Install Widget` option in the action bar
+2. Upload a widget zip file (Created using the [Runtime Widget Template](https://github.com/SoftwareAG/cumulocity-runtime-widget))
+3. Start using your widget
+
+## Builds
+
+### Using the Application Builder?
+This is already included in the latest version of the [Application Builder](https://github.com/SoftwareAG/cumulocity-app-builder)
+
+### Want to add Runtime Widgets to the Cumulocity Cockpit?
+Pick one of the pre-built images available in the [Releases Area](https://github.com/SoftwareAG/cumulocity-runtime-widget-loader/releases).
+
+
+## Build Instructions
 1. (Optional) Create a new Cumulocity web app and initialise it:
    ```
-   c8ycli new cockpit cockpit -a @c8y/apps@1006.2.0
+   c8ycli new cockpit cockpit -a @c8y/apps@1006.3.0
    cd cockpit
    npm install
    ```
@@ -12,7 +30,7 @@ Loads packaged Cumulocity custom widgets at runtime
    ```
    npm install jszip webpack-external-import
    ```
-   For the 1006.2.0 version of cumulocity you also need to install a specific version of ngx-bootstrap:
+   For the 1006.3.0 version of cumulocity you also need to install a specific version of ngx-bootstrap:
    ```
    npm install ngx-bootstrap@5.5.0
    ```   
@@ -72,7 +90,7 @@ Loads packaged Cumulocity custom widgets at runtime
    ```
    npm install --save-dev patch-package
    ```
-   Edit package.json (reapply a patch after every install):
+   Edit package.json (to reapply a patch after every install):
    ```
    {
      ...
@@ -91,4 +109,3 @@ Loads packaged Cumulocity custom widgets at runtime
    ```
    npm start
    ```
-
