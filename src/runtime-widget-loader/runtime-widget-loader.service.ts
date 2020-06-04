@@ -104,19 +104,19 @@ export class RuntimeWidgetLoaderService {
 
         const contextPaths = (app && app.widgetContextPaths) || [];
 
-        // Import every widget's importManifest.js
-        // The importManifest is a mapping from exported module name to webpack chunk file
-        for (const contextPath of contextPaths) {
-            // Don't need to wait for login, application code is public
-            await (corsImport(`/apps/${contextPath}/importManifest.js?${Date.now()}`)
-                .catch((e) => {
-                    console.error(`Unable to find widget manifest: /apps/${contextPath}/importManifest.js\n`, e);
-                }));
-        }
-
-        // Load the jsModules containing the custom widgets
         const jsModules = [];
+
         for (const contextPath of contextPaths) {
+            // Import every widget's importManifest.js
+            // The importManifest is a mapping from exported module name to webpack chunk file
+            try {
+                await corsImport(`/apps/${contextPath}/importManifest.js?${Date.now()}`);
+            } catch(e) {
+                console.error(`Unable to find widget manifest: /apps/${contextPath}/importManifest.js\n`, e);
+                continue;
+            }
+
+            // Load the jsModules containing the custom widgets
             try {
                 // @ts-ignore
                 const jsModule = await __webpack_require__.interleaved(`${contextPath}/${contextPath}-CustomWidget`);
