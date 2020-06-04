@@ -1,5 +1,5 @@
 # Cumulocity Runtime Widget Loader
-Load [packaged](https://github.com/SoftwareAG/cumulocity-runtime-widget) Cumulocity custom widgets at runtime, rather than by recompiling you whole application.
+Load [packaged](https://github.com/SoftwareAG/cumulocity-runtime-widget) Cumulocity custom widgets at runtime, rather than by recompiling your whole application.
 
 ## Widget Installation
 **Requires:** Application upload permission (usually admin rights)
