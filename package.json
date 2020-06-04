@@ -15,7 +15,7 @@
   },
   "scripts": {
     "build": "ng-packagr -p package.json",
-    "deploy": "npm publish ./dist",
+    "deploy": "npm publish ./dist --tag latest",
     "postinstall": "patch-package"
   },
   "keywords": [
