@@ -1,5 +1,5 @@
-# Cumulocity Runtime Widget Loader
-Load [packaged](https://github.com/SoftwareAG/cumulocity-runtime-widget) Cumulocity custom widgets at runtime, rather than by recompiling your whole application.
+# Cumulocity IoT Runtime Widget Loader
+Load [packaged](https://github.com/SoftwareAG/cumulocity-runtime-widget) Cumulocity IoT custom widgets at runtime, rather than by recompiling your whole application.
 
 ## Widget Installation
 **Requires:** Application upload permission (usually admin rights)
@@ -15,12 +15,12 @@ Load [packaged](https://github.com/SoftwareAG/cumulocity-runtime-widget) Cumuloc
 ### Using the Application Builder?
 This is already included in the latest version of the [Application Builder](https://github.com/SoftwareAG/cumulocity-app-builder)
 
-### Want to add Runtime Widgets to the Cumulocity Cockpit?
+### Want to add Runtime Widgets to the Cumulocity IoT Cockpit?
 Pick one of the pre-built images available in the [Releases Area](https://github.com/SoftwareAG/cumulocity-runtime-widget-loader/releases).
 
 
 ## Build Instructions
-1. (Optional) Create a new Cumulocity web app and initialise it:
+1. (Optional) Create a new Cumulocity IoT web app and initialise it:
    ```
    c8ycli new cockpit cockpit -a @c8y/apps@1006.3.0
    cd cockpit
@@ -30,7 +30,7 @@ Pick one of the pre-built images available in the [Releases Area](https://github
    ```
    npm install jszip webpack-external-import
    ```
-   For the 1006.3.0 version of cumulocity you also need to install a specific version of ngx-bootstrap:
+   For the 1006.3.0 version of Cumulocity IoT you also need to install a specific version of ngx-bootstrap:
    ```
    npm install ngx-bootstrap@5.5.0
    ```   
