@@ -159,27 +159,37 @@ export class RuntimeWidgetLoaderService {
 
         // Pull out all of the widgets from those angular modules and add them to cumulocity
         for (const ngModule of ngModules) {
-            const widgets = ngModule.injector.get<DynamicComponentDefinition[]>(HOOK_COMPONENTS) || [];
+            const widgets = ngModule.injector.get<(DynamicComponentDefinition | DynamicComponentDefinition[])[]>(HOOK_COMPONENTS) || [];
 
             // Add the widget components into cumulocity
             for (const widget of widgets) {
-                (widget as any).isRuntimeLoaded = true;
-
-                try {
-                    this.widgetFactories.set(widget.id, {
-                        componentFactory: ngModule.componentFactoryResolver.resolveComponentFactory(widget.component),
-                        ...widget.configComponent && {configComponentFactory: ngModule.componentFactoryResolver.resolveComponentFactory(widget.configComponent)},
-                        injector: ngModule.injector
-                    });
-
-                    dynamicComponentService.add(widget);
-                } catch (e) {
-                    console.error(`Failed to load runtime widget:`, widget, '\n', e);
-                    this.alertService.danger('Failed to load runtime custom widget, it may have been compiled for a different Cumulocity version.', e.message);
+                if (Array.isArray(widget)) {
+                    for (const singleWidget of widget) {
+                        this.loadWidget(ngModule, dynamicComponentService, singleWidget);
+                    }
+                } else {
+                    this.loadWidget(ngModule, dynamicComponentService, widget);
                 }
             }
         }
 
         this.isLoaded$.next(true);
+    }
+
+    loadWidget(ngModule: NgModuleRef<unknown>, dynamicComponentService: DynamicComponentService, widget: DynamicComponentDefinition) {
+        (widget as any).isRuntimeLoaded = true;
+
+        try {
+            this.widgetFactories.set(widget.id, {
+                componentFactory: ngModule.componentFactoryResolver.resolveComponentFactory(widget.component),
+                ...widget.configComponent && {configComponentFactory: ngModule.componentFactoryResolver.resolveComponentFactory(widget.configComponent)},
+                injector: ngModule.injector
+            });
+
+            dynamicComponentService.add(widget);
+        } catch (e) {
+            console.error(`Failed to load runtime widget:`, widget, '\n', e);
+            this.alertService.danger('Failed to load runtime custom widget, it may have been compiled for a different Cumulocity version.', e.message);
+        }
     }
 }
