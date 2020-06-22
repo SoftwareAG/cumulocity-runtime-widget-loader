@@ -3,6 +3,7 @@
   "name": "cumulocity-runtime-widget-loader",
   "version": "1006.3.0-1.1",
   "description": "Loads packaged widgets into Cumulocity IoT at runtime",
+  "repository": "github:SoftwareAG/cumulocity-runtime-widget-loader",
   "main": "src/public_api.ts",
   "ngPackage": {
     "assets": [
