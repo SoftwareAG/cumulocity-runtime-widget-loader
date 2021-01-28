@@ -18,6 +18,7 @@
 
 import {Injectable, Injector, isDevMode} from "@angular/core";
 import { ApplicationService, IApplication } from "@c8y/client";
+import { Alert } from '@c8y/ngx-components';
 import * as JSZip from "jszip";
 
 export function contextPathFromURL() {
@@ -42,14 +43,27 @@ export class RuntimeWidgetInstallerService {
      * @param widgetFile
      * @param onUpdate
      */
-    async installWidget(widgetFile: Blob, onUpdate: (msg: string) => void = ()=>{}) {
+    async installWidget(widgetFile: Blob, onUpdate: (msg: string, type?: any) => void = ()=>{}) {
         // Check if we're debugging or on localhost - updating the app's cumulocity.json won't work when debugging on localhost so don't do anything
         const currentHost = window.location.host.split(':')[0];
         if (isDevMode() || currentHost === 'localhost' || currentHost === '127.0.0.1') {
             throw Error("Can't add a widget when running in Development Mode. Deploy the application first, or edit the package.json file.");
         }
 
-        // Step1: Deploy widget as an application to the tenant (if it doesn't already exist)
+        // Step 1: Check current Application
+
+        // find the current app
+        const appList = (await this.appService.list({pageSize: 2000})).data;
+        const app: IApplication & {widgetContextPaths?: string[]} = appList.find(app => app.contextPath === contextPathFromURL());
+        if (!app) {
+            throw Error('Could not find current application');
+        } else if(app.availability !== 'PRIVATE') {
+            onUpdate("Could not install widget on subscribed application", 'danger');
+            throw Error("Could not install widget on subscribed application");
+        }
+
+        
+        // Step2: Deploy widget as an application to the tenant (if it doesn't already exist)
 
         // Get the widget's c8yJson so that we can read the context-path (to check if it is already deployed)
         let widgetC8yJson;
@@ -64,8 +78,6 @@ export class RuntimeWidgetInstallerService {
             console.log(e);
             throw Error("Not a valid widget");
         }
-
-        const appList = (await this.appService.list({pageSize: 2000})).data;
 
         // Deploy the widget
         if (appList.some(app => app.contextPath === widgetC8yJson.contextPath)) {
@@ -89,13 +101,7 @@ export class RuntimeWidgetInstallerService {
             onUpdate("Widget deployed! Adding to application...");
         }
 
-        // Step 2: Update the app's cumulocity.json to include the new widget
-
-        // find the current app
-        const app: IApplication & {widgetContextPaths?: string[]} = appList.find(app => app.contextPath === contextPathFromURL());
-        if (!app) {
-            throw Error('Could not find current application');
-        }
+        // Step 3: Update the app's cumulocity.json to include the new widget
 
         // Create a unique list of all the widgets in the app
         const widgetContextPaths = Array.from(new Set([

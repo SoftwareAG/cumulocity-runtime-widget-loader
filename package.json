@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/ng-packagr/package.schema.json",
   "name": "cumulocity-runtime-widget-loader",
-  "version": "1006.3.0-1.2.alpha",
+  "version": "1006.3.0-1.3.alpha",
   "description": "Loads packaged widgets into Cumulocity IoT at runtime",
   "repository": "github:SoftwareAG/cumulocity-runtime-widget-loader",
   "main": "src/public_api.ts",

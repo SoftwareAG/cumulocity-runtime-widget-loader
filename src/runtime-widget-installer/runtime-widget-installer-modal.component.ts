@@ -47,11 +47,11 @@ export class RuntimeWidgetInstallerModalComponent {
             }
             this.alertService.add(currentAlert);
 
-            await this.widgetInstallerService.installWidget(widgetFile, (msg) => {
+            await this.widgetInstallerService.installWidget(widgetFile, (msg, type) => {
                 this.alertService.remove(currentAlert);
                 currentAlert = {
                     text: msg,
-                    type: "info"
+                    type: (type ?  type: "info")
                 }
                 this.alertService.add(currentAlert);
             });
