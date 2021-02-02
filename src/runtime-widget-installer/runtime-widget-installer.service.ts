@@ -17,9 +17,10 @@
  */
 
 import {Injectable, Injector, isDevMode} from "@angular/core";
-import { ApplicationService, IApplication } from "@c8y/client";
+import { ApplicationService, IApplication ,InventoryService} from "@c8y/client";
 import { Alert } from '@c8y/ngx-components';
 import * as JSZip from "jszip";
+
 
 export function contextPathFromURL() {
     return window.location.pathname.match(/\/apps\/(.*?)\//)[1];
@@ -28,12 +29,14 @@ export function contextPathFromURL() {
 @Injectable({providedIn: 'root'})
 export class RuntimeWidgetInstallerService {
     private appService: ApplicationService;
+    private invService: InventoryService;
     constructor(injector: Injector) {
         // Work around angular/typescript compiler issue...
         // When we put the ApplicationService as an injection token then the compiler generates an import from @c8y/client/lib/src/ApplicationService
         // This seems to only happen when providedIn: root is used...
         // We want to use providedIn: root so that this service is tree-shaken
         this.appService = injector.get(ApplicationService);
+        this.invService =  injector.get(InventoryService);
     }
 
     /**
@@ -56,11 +59,8 @@ export class RuntimeWidgetInstallerService {
         const appList = (await this.appService.list({pageSize: 2000})).data;
         const app: IApplication & {widgetContextPaths?: string[]} = appList.find(app => app.contextPath === contextPathFromURL());
         if (!app) {
-            throw Error('Could not find current application');
-        } else if(app.availability !== 'PRIVATE') {
-            onUpdate("Could not install widget on subscribed application", 'danger');
-            throw Error("Could not install widget on subscribed application");
-        }
+            throw Error('Could not find current application.');
+        } 
 
         
         // Step2: Deploy widget as an application to the tenant (if it doesn't already exist)
@@ -103,16 +103,40 @@ export class RuntimeWidgetInstallerService {
 
         // Step 3: Update the app's cumulocity.json to include the new widget
 
-        // Create a unique list of all the widgets in the app
-        const widgetContextPaths = Array.from(new Set([
-            ...app.widgetContextPaths || [],
-            widgetC8yJson.contextPath
-        ]));
+        
+        const AppRuntimePathList = (await this.invService.list( {pageSize: 2000, query: `type eq app_runtimeContext`})).data;
+        const AppRuntimePath: IAppRuntimeContext & {widgetContextPaths?: string[]} = AppRuntimePathList.find(path => path.appId === app.id);
+        
+        let widgetContextPaths = [];
+        if(AppRuntimePath && AppRuntimePath.widgetContextPaths) {
+            widgetContextPaths = Array.from(new Set([
+                ...AppRuntimePath.widgetContextPaths || [],
+                widgetC8yJson.contextPath
+            ]));
+        } else {
+            widgetContextPaths = Array.from(new Set([
+                widgetC8yJson.contextPath
+            ]));
+        }
 
-        // Update the application with the new widget context path list
-        await this.appService.update({
-            id: app.id,
-            widgetContextPaths
-        } as IApplication);
+        if(AppRuntimePath) {
+            this.invService.update({
+                id: AppRuntimePath.id,
+                widgetContextPaths
+            })
+        } else  {
+            this.invService.create({
+                type: 'app_runtimeContext',
+                appId: app.id,
+                widgetContextPaths
+            });
+        }
     }
+}
+
+export interface IAppRuntimeContext {
+    id?: any;
+    widgetContextPaths?: any;
+    type?: string;
+    appId?: string;
 }
