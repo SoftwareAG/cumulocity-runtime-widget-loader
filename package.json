@@ -1,7 +1,7 @@
 {
   "$schema": "./nod24modules/ng-packagr/package.schema.json",
   "name": "cumulocity-runtime-widget-loader",
-  "version": "1006.6.24-1.8.alpha",
+  "version": "1006.6.24-1.0.0",
   "description": "Loads packaged widgets into Cumulocity IoT at runtime",
   "repository": "github:SoftwareAG/cumulocity-runtime-widget-loader",
   "main": "src/public_api.ts",
@@ -24,7 +24,7 @@
     "Runtime",
     "Widget"
   ],
-  "author": "Richard Peach - Software AG, Global Presales",
+  "author": "Darpankumar Lalani - Software AG, Global Presales",
   "license": "Apache-2.0",
   "peerDependencies": {
     "@angular/common": "^8.2.13",
