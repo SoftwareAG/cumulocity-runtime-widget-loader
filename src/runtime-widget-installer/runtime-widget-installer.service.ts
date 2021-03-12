@@ -57,9 +57,12 @@ export class RuntimeWidgetInstallerService {
 
         // find the current app
         const appList = (await this.appService.list({pageSize: 2000})).data;
-        const app: IApplication & {widgetContextPaths?: string[]} = appList.find(app => app.contextPath === contextPathFromURL());
+        let app: IApplication & {widgetContextPaths?: string[]} = appList.find(app => app.contextPath === contextPathFromURL() &&
+         app.availability === 'PRIVATE');
         if (!app) {
-            throw Error('Could not find current application.');
+            // Own App builder not found. Looking for subscribed one
+            app = appList.find(app => app.contextPath === contextPathFromURL());
+            if(!app) { throw Error('Could not find current application.');}
         } 
 
         
@@ -122,13 +125,15 @@ export class RuntimeWidgetInstallerService {
         if(AppRuntimePath) {
             this.invService.update({
                 id: AppRuntimePath.id,
-                widgetContextPaths
+                widgetContextPaths,
+                c8y_Global: {}
             })
         } else  {
             this.invService.create({
                 type: 'app_runtimeContext',
                 appId: app.id,
-                widgetContextPaths
+                widgetContextPaths,
+                c8y_Global: {}
             });
         }
     }
